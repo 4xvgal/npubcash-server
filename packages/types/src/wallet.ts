@@ -11,6 +11,8 @@ export type Quote = {
   state: string;
   locked: boolean;
   zapRequest?: string;
+  autoStoredAt?: number;
+  claimId?: number;
 };
 
 export type QuotesResponse = {

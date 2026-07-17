@@ -8,6 +8,7 @@ export type User = {
   name?: string;
   mintUrl: string;
   lockQuote: boolean;
+  claimStorageMode: "off" | "on_expire";
 };
 
 /**
@@ -25,6 +26,13 @@ export type SetLockQuotesPayload = {
 };
 
 /**
+ * Payload for setting the user's fallback claim storage mode.
+ */
+export type SetClaimStoragePayload = {
+  mode: "off" | "on_expire";
+};
+
+/**
  * Payload for setting the user's username.
  */
 export type SetUsernamePayload = {
@@ -38,6 +46,7 @@ export type UserResponse = {
   error: false;
   data: {
     user: User;
+    claimBalance: number;
   };
 };
 
