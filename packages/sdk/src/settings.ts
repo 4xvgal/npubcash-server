@@ -78,4 +78,49 @@ export class SettingsManager {
       throw error;
     }
   }
+
+  /**
+   * Set the fallback claim storage mode for the user.
+   * @param mode "off" disables server-side storage; "on_expire" stores unclaimed
+   *   ecash automatically when a quote is within 3 hours of expiry.
+   * @returns Updated user settings resource.
+   */
+  async setClaimStorageMode(
+    mode: "off" | "on_expire",
+  ): Promise<UserResponse> {
+    try {
+      const response = await this._authenticatedRequest<UserResponse>(
+        "/api/v2/user/claim-storage",
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ mode }),
+        }
+      );
+      this.logger?.info("Claim storage mode updated successfully");
+      return response;
+    } catch (error) {
+      this.logger?.error("Error updating claim storage mode:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get the current fallback claim storage mode for the user.
+   * @returns Current mode.
+   */
+  async getClaimStorageMode(): Promise<{ mode: "off" | "on_expire" }> {
+    try {
+      const response = await this._authenticatedRequest<{
+        error: false;
+        data: { mode: "off" | "on_expire" };
+      }>("/api/v2/user/claim-storage");
+      return response.data;
+    } catch (error) {
+      this.logger?.error("Error fetching claim storage mode:", error);
+      throw error;
+    }
+  }
 }

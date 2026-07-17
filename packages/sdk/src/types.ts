@@ -43,7 +43,19 @@ export interface AuthProvider {
 // API Types
 // ─────────────────────────────────────────────────────────────────────────────
 
-export type ApiResponse = QuotesResponse | UserResponse | Nip98Response;
+export type ApiResponse =
+  | QuotesResponse
+  | UserResponse
+  | Nip98Response
+  | {
+      error: false;
+      data: {
+        tokens: Array<{ mint: string; token: string; count: number }>;
+        totalCount: number;
+      };
+    }
+  | { error: false; data: number }
+  | { error: false; data: { mode: "off" | "on_expire" } };
 
 export interface RequestOptions extends RequestInit {
   params?: Record<string, string | number | boolean>;

@@ -16,7 +16,8 @@
     "dist"
   ],
   "scripts": {
-    "build": "vite build"
+    "build": "vite build",
+    "test": "bun test"
   },
   "dependencies": {
     "@cashu/cashu-ts": "^3.2.2",

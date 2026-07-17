@@ -22,6 +22,8 @@ const API_PATHS = {
   QUOTES: "/api/v2/wallet/quotes",
   INFO: "/api/v2/user/info",
   USERNAME: "/api/v2/user/username",
+  CLAIM: "/api/v2/claim",
+  BALANCE: "/api/v2/balance",
 };
 const PAGINATION_LIMIT = 50;
 const THROTTLE_DELAY_MS = 200;
@@ -77,12 +79,11 @@ export class NPCClient {
    * @returns The user's account information.
    * @throws {ApiError} When the request fails.
    */
-  public async getInfo(): Promise<User> {
+  public async getInfo(): Promise<{ user: User; claimBalance: number }> {
     const infoRes = await this._authenticatedRequest<UserResponse>(
       API_PATHS.INFO,
     );
-    console.log(infoRes);
-    return infoRes.data.user;
+    return infoRes.data;
   }
 
   /**
@@ -132,6 +133,38 @@ export class NPCClient {
   public async getAllQuotes(): Promise<Quote[]> {
     this.logger.debug("Fetching all quotes.");
     return this._fetchPaginatedQuotes();
+  }
+
+  /**
+   * Withdraw ready fallback claims as Cashu tokens grouped by mint.
+   * @returns List of token groups and the total number of included proofs.
+   */
+  public async getClaim(): Promise<{
+    tokens: Array<{ mint: string; token: string; count: number }>;
+    totalCount: number;
+  }> {
+    this.logger.debug("Fetching fallback claim tokens.");
+    const res = await this._authenticatedRequest<{
+      error: false;
+      data: {
+        tokens: Array<{ mint: string; token: string; count: number }>;
+        totalCount: number;
+      };
+    }>(API_PATHS.CLAIM);
+    return res.data;
+  }
+
+  /**
+   * Get the total amount of unclaimed fallback storage in satoshis.
+   * @returns Total amount.
+   */
+  public async getBalance(): Promise<number> {
+    this.logger.debug("Fetching fallback balance.");
+    const res = await this._authenticatedRequest<{
+      error: false;
+      data: number;
+    }>(API_PATHS.BALANCE);
+    return res.data;
   }
 
   /**
