@@ -23,6 +23,10 @@ type MintQuoteRow = {
   paid_at: Date | null;
   serialized_zap_request: string | null;
   locked: boolean;
+  auto_stored_at: Date | null;
+  auto_store_attempts: number;
+  last_auto_store_attempt_at: Date | null;
+  claim_id: number | null;
 };
 
 export class PostgresMintQuoteRepository implements MintQuoteRepository {
@@ -132,6 +136,62 @@ RETURNING *`;
     await queryWrapper(query, [state, ...ids]);
   }
 
+  async getAutoStoreCandidates(
+    beforeExpiryMs: number,
+    maxAttempts: number,
+    retryDelayMs: number,
+    limit: number,
+  ): Promise<MintQuote[]> {
+    const cutoff = new Date(Date.now() + beforeExpiryMs);
+    const retryCutoff = new Date(Date.now() - retryDelayMs);
+    const res = await queryWrapper<MintQuoteRow>(
+      `SELECT * FROM mint_quotes
+       WHERE (state = 'PAID' OR state = 'ISSUED')
+         AND auto_stored_at IS NULL
+         AND auto_store_attempts < $1
+         AND expires_at <= $2
+         AND (
+           last_auto_store_attempt_at IS NULL
+           OR last_auto_store_attempt_at <= $3
+         )
+       ORDER BY expires_at ASC
+       LIMIT $4`,
+      [maxAttempts, cutoff, retryCutoff, limit],
+    );
+    return res.rows.map((r) => this.castRowToQuote(r));
+  }
+
+  async recordAutoStoreAttempt(
+    id: number,
+    attempts: number,
+    claimId?: number,
+  ): Promise<void> {
+    if (claimId) {
+      const query = `
+        UPDATE mint_quotes
+        SET auto_store_attempts = $1,
+            auto_stored_at = NOW(),
+            last_auto_store_attempt_at = NOW(),
+            claim_id = $2
+        WHERE id = $3`;
+      const res = await queryWrapper(query, [attempts, claimId, id]);
+      if (res.rowCount === 0) {
+        throw new Error("Failed to record auto-store attempt");
+      }
+      return;
+    }
+
+    const query = `
+      UPDATE mint_quotes
+      SET auto_store_attempts = $1,
+          last_auto_store_attempt_at = NOW()
+      WHERE id = $2`;
+    const res = await queryWrapper(query, [attempts, id]);
+    if (res.rowCount === 0) {
+      throw new Error("Failed to record auto-store attempt");
+    }
+  }
+
   private castRowToQuote(row: MintQuoteRow): MintQuote {
     return new MintQuote({
       id: row.id,
@@ -147,6 +207,12 @@ RETURNING *`;
       paidAt: row.paid_at ? new Date(row.paid_at) : undefined,
       serializedZapRequest: row.serialized_zap_request ?? undefined,
       locked: row.locked,
+      autoStoredAt: row.auto_stored_at ? new Date(row.auto_stored_at) : undefined,
+      autoStoreAttempts: row.auto_store_attempts,
+      lastAutoStoreAttemptAt: row.last_auto_store_attempt_at
+        ? new Date(row.last_auto_store_attempt_at)
+        : undefined,
+      claimId: row.claim_id ?? undefined,
     });
   }
 }

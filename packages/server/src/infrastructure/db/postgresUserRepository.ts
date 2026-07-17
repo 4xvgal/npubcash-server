@@ -10,6 +10,7 @@ type UserTableRow = {
   name: string | null;
   mint_url: string;
   lock_quote: boolean;
+  claim_storage_mode: string;
 };
 
 export class PostgresUserRepository implements UserRepository {
@@ -68,7 +69,7 @@ RETURNING *;`;
     pubkey: string,
   ): Promise<void> {
     const query = `
-INSERT INTO l_users (lock_quote, pubkey) 
+INSERT INTO l_users (lock_quote, pubkey)
 VALUES ($1, $2)
 ON CONFLICT (pubkey)
 DO UPDATE SET lock_quote = $1;`;
@@ -78,21 +79,38 @@ DO UPDATE SET lock_quote = $1;`;
     }
   }
 
+  async upsertClaimStorageMode(
+    mode: "off" | "on_expire",
+    pubkey: string,
+  ): Promise<void> {
+    const query = `
+INSERT INTO l_users (claim_storage_mode, pubkey)
+VALUES ($1, $2)
+ON CONFLICT (pubkey)
+DO UPDATE SET claim_storage_mode = $1;`;
+    const queryRes = await queryWrapper(query, [mode, pubkey]);
+    if (queryRes.rowCount === 0) {
+      throw new Error("Did not update claim_storage_mode");
+    }
+  }
+
   async saveUser(user: User): Promise<void> {
     const query = `
-INSERT INTO l_users (pubkey, name, mint_url, lock_quote)
-VALUES ($1, $2, $3, $4)
+INSERT INTO l_users (pubkey, name, mint_url, lock_quote, claim_storage_mode)
+VALUES ($1, $2, $3, $4, $5)
 ON CONFLICT (pubkey)
 DO UPDATE SET
 name = $2,
 mint_url = $3,
-lock_quote = $4;
+lock_quote = $4,
+claim_storage_mode = $5;
 `;
     const queryRes = await queryWrapper(query, [
       user.pubkey,
       user.name,
       user.mintUrl,
       user.lockQuote,
+      user.claimStorageMode,
     ]);
     if (queryRes.rowCount === 0) {
       throw new Error("Did not update user");
@@ -106,12 +124,14 @@ lock_quote = $4;
         name: row.name,
         mintUrl: row.mint_url,
         lockQuote: row.lock_quote,
+        claimStorageMode: row.claim_storage_mode as "off" | "on_expire",
       });
     }
     return new User({
       pubkey: row.pubkey,
       mintUrl: row.mint_url,
       lockQuote: row.lock_quote,
+      claimStorageMode: row.claim_storage_mode as "off" | "on_expire",
     });
   }
 }

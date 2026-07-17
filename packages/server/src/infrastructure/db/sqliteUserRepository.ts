@@ -10,6 +10,7 @@ type UserTableRow = {
   name: string | null;
   mint_url: string;
   lock_quote: number;
+  claim_storage_mode: string;
 };
 
 export class SqliteUserRepository implements UserRepository {
@@ -83,21 +84,38 @@ DO UPDATE SET lock_quote = excluded.lock_quote;`;
     }
   }
 
+  async upsertClaimStorageMode(
+    mode: "off" | "on_expire",
+    pubkey: string,
+  ): Promise<void> {
+    const query = `
+INSERT INTO l_users (claim_storage_mode, pubkey)
+VALUES (?, ?)
+ON CONFLICT (pubkey)
+DO UPDATE SET claim_storage_mode = excluded.claim_storage_mode;`;
+    const queryRes = await queryWrapper(query, [mode, pubkey]);
+    if (queryRes.rowCount === 0) {
+      throw new Error("Did not update claim_storage_mode");
+    }
+  }
+
   async saveUser(user: User): Promise<void> {
     const query = `
-INSERT INTO l_users (pubkey, name, mint_url, lock_quote)
-VALUES (?, ?, ?, ?)
+INSERT INTO l_users (pubkey, name, mint_url, lock_quote, claim_storage_mode)
+VALUES (?, ?, ?, ?, ?)
 ON CONFLICT (pubkey)
 DO UPDATE SET
 name = excluded.name,
 mint_url = excluded.mint_url,
-lock_quote = excluded.lock_quote;
+lock_quote = excluded.lock_quote,
+claim_storage_mode = excluded.claim_storage_mode;
 `;
     const queryRes = await queryWrapper(query, [
       user.pubkey,
       user.name,
       user.mintUrl,
       user.lockQuote ? 1 : 0,
+      user.claimStorageMode,
     ]);
     if (queryRes.rowCount === 0) {
       throw new Error("Did not update user");
@@ -111,12 +129,14 @@ lock_quote = excluded.lock_quote;
         name: row.name,
         mintUrl: row.mint_url,
         lockQuote: Boolean(row.lock_quote),
+        claimStorageMode: row.claim_storage_mode as "off" | "on_expire",
       });
     }
     return new User({
       pubkey: row.pubkey,
       mintUrl: row.mint_url,
       lockQuote: Boolean(row.lock_quote),
+      claimStorageMode: row.claim_storage_mode as "off" | "on_expire",
     });
   }
 }
