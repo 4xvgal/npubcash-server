@@ -1,6 +1,8 @@
 import { usernameController } from "@/controller/username";
 import {
+  getClaimStorageSetting,
   getUserSettings,
+  updateClaimStorageSetting,
   updateUserMintSetting,
   updateUserSettingLock,
 } from "@/controller/userSettingsController";
@@ -13,13 +15,17 @@ const userRouter = Router();
  * @openapi
  * /api/v2/user/info:
  *   get:
- *     summary: Get user settings
+ *     summary: Get user settings and claim balance
  *     tags: [User]
  *     security:
  *       - JWT: []
  *     responses:
  *       200:
- *         description: User settings
+ *         description: User settings and claim balance
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UserResponse'
  */
 userRouter.get(
   "/info",
@@ -75,7 +81,11 @@ userRouter.post(
  *                 type: boolean
  *     responses:
  *       200:
- *         description: Updated
+ *         description: Updated user settings with claim balance
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UserResponse'
  */
 userRouter.patch(
   "/lock",
@@ -102,12 +112,88 @@ userRouter.patch(
  *                 type: string
  *     responses:
  *       200:
- *         description: Updated
+ *         description: Updated user settings with claim balance
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UserResponse'
  */
 userRouter.patch(
   "/mint",
   isAuthMiddleware("/api/v2/user/mint", "PATCH"),
   updateUserMintSetting,
+);
+
+/**
+ * @openapi
+ * /api/v2/user/claim-storage:
+ *   get:
+ *     summary: Get the current fallback claim storage mode
+ *     tags: [User]
+ *     security:
+ *       - JWT: []
+ *     responses:
+ *       200:
+ *         description: Current mode
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     mode:
+ *                       type: string
+ *                       enum: [off, on_expire]
+ */
+userRouter.get(
+  "/claim-storage",
+  isAuthMiddleware("/api/v2/user/claim-storage", "GET"),
+  getClaimStorageSetting,
+);
+
+/**
+ * @openapi
+ * /api/v2/user/claim-storage:
+ *   patch:
+ *     summary: Set the fallback claim storage mode
+ *     tags: [User]
+ *     security:
+ *       - JWT: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               mode:
+ *                 type: string
+ *                 enum: [off, on_expire]
+ *     responses:
+ *       200:
+ *         description: Updated claim storage mode
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     mode:
+ *                       type: string
+ *                       enum: [off, on_expire]
+ */
+userRouter.patch(
+  "/claim-storage",
+  isAuthMiddleware("/api/v2/user/claim-storage", "PATCH"),
+  updateClaimStorageSetting,
 );
 
 export default userRouter;

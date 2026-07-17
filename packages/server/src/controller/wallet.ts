@@ -2,7 +2,11 @@ import { mintQuoteRepository } from "@/config";
 import { MintQuote } from "@/domain/mintQuote/MintQuote";
 import { dateToUnix } from "@/utils/time";
 import { NextFunction, Request, Response } from "express";
-import { Quote, QuotesResponse, ReponseMetadata } from "@npubcash/types";
+import {
+  Quote,
+  QuotesResponse,
+  QuotesReponseMetadata,
+} from "npubcash-types";
 
 interface MintQuoteQuery {
   limit?: string;
@@ -88,13 +92,17 @@ function mapMintQuoteToResponse(mintQuote: any): Quote {
     ...(mintQuote.serializedZapRequest && {
       zapRequest: mintQuote.serializedZapRequest,
     }),
+    ...(mintQuote.autoStoredAt && {
+      autoStoredAt: dateToUnix(mintQuote.autoStoredAt),
+    }),
+    ...(mintQuote.claimId && { claimId: mintQuote.claimId }),
   };
 }
 
 function createMetadata(
   parsedQuery: ParsedQuery,
   total: number,
-): ReponseMetadata {
+): QuotesReponseMetadata {
   return {
     ...(parsedQuery.since && {
       since: dateToUnix(parsedQuery.since),
