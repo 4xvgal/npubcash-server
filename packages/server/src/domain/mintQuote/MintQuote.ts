@@ -19,11 +19,15 @@ export interface MintQuoteConfig {
   paidAt?: Date;
   serializedZapRequest?: string;
   locked: boolean;
+  autoStoredAt?: Date;
+  autoStoreAttempts: number;
+  lastAutoStoreAttemptAt?: Date;
+  claimId?: number;
 }
 
 export type CreateMintQuoteInput = Omit<
   MintQuoteConfig,
-  "id" | "createdAt" | "state"
+  "id" | "createdAt" | "state" | "autoStoreAttempts" | "lastAutoStoreAttemptAt"
 >;
 
 export class MintQuote implements MintQuoteConfig {
@@ -40,6 +44,10 @@ export class MintQuote implements MintQuoteConfig {
   paidAt?: Date;
   serializedZapRequest?: string;
   locked: boolean;
+  autoStoredAt?: Date;
+  autoStoreAttempts: number;
+  lastAutoStoreAttemptAt?: Date;
+  claimId?: number;
 
   constructor(config: MintQuoteConfig) {
     this.id = config.id;
@@ -55,5 +63,9 @@ export class MintQuote implements MintQuoteConfig {
     this.paidAt = config.paidAt;
     this.serializedZapRequest = config.serializedZapRequest;
     this.locked = config.locked;
+    this.autoStoredAt = config.autoStoredAt;
+    this.autoStoreAttempts = config.autoStoreAttempts;
+    this.lastAutoStoreAttemptAt = config.lastAutoStoreAttemptAt;
+    this.claimId = config.claimId;
   }
 }

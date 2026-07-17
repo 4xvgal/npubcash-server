@@ -1,4 +1,4 @@
-import { User, UserWithName } from "./user";
+import { User, UserWithName, ClaimStorageMode } from "./user";
 
 export interface UserRepository {
   getUserByPubkey(pubkey: string): Promise<User | null>;
@@ -6,5 +6,6 @@ export interface UserRepository {
   createUser(pubkey: string, name: string, mintUrl?: string): Promise<void>;
   upsertUsername(pubkey: string, name: string): Promise<User>;
   upsertLockQuote(shouldLockQuote: boolean, pubkey: string): Promise<void>;
+  upsertClaimStorageMode(mode: ClaimStorageMode, pubkey: string): Promise<void>;
   saveUser(user: User): Promise<void>;
 }

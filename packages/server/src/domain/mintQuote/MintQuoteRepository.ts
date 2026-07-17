@@ -22,4 +22,15 @@ export interface MintQuoteRepository {
     since?: Date
   ): Promise<UserMintHistoryResult>;
   bulkUpdateState(state: MintQuoteState, ids: number[]): Promise<void>;
+  getAutoStoreCandidates(
+    beforeExpiryMs: number,
+    maxAttempts: number,
+    retryDelayMs: number,
+    limit: number,
+  ): Promise<MintQuote[]>;
+  recordAutoStoreAttempt(
+    id: number,
+    attempts: number,
+    claimId?: number,
+  ): Promise<void>;
 }

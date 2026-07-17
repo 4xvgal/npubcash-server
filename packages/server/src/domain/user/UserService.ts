@@ -1,7 +1,7 @@
 import { nip19 } from "nostr-tools";
 import { UserRepository } from "./userRepository";
 import { BadRequestError, NotFoundError } from "@/errors";
-import { User, UserWithName } from "./user";
+import { User, UserWithName, ClaimStorageMode } from "./user";
 import { usernameRegex } from "@/constants/regex";
 import { config } from "@/config/index";
 
@@ -71,12 +71,14 @@ export class UserService {
     name?: string,
     mintUrl?: string,
     lockQuote?: boolean,
+    claimStorageMode?: ClaimStorageMode,
   ) {
     return new User({
       pubkey,
       name,
       mintUrl: mintUrl || config.mintUrl,
       lockQuote: lockQuote || false,
+      claimStorageMode: claimStorageMode || "off",
     });
   }
 
@@ -90,5 +92,9 @@ export class UserService {
 
   async setShouldLockQuote(pubkey: string, shouldLockQuote: boolean) {
     return this.userRepo.upsertLockQuote(shouldLockQuote, pubkey);
+  }
+
+  async setClaimStorageMode(pubkey: string, mode: ClaimStorageMode) {
+    return this.userRepo.upsertClaimStorageMode(mode, pubkey);
   }
 }

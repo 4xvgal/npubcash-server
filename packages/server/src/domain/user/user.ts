@@ -1,8 +1,11 @@
+export type ClaimStorageMode = "off" | "on_expire";
+
 export interface UserCofig {
   pubkey: string;
   name?: string;
   mintUrl: string;
   lockQuote: boolean;
+  claimStorageMode?: ClaimStorageMode;
 }
 
 export class User {
@@ -11,12 +14,14 @@ export class User {
   mintUrl: string;
   //TODO: Make sure casing is consistent
   lockQuote: boolean;
+  claimStorageMode: ClaimStorageMode;
 
   constructor(config: UserCofig) {
     this.pubkey = config.pubkey;
     this.mintUrl = config.mintUrl;
     this.name = config.name;
     this.lockQuote = config.lockQuote;
+    this.claimStorageMode = config.claimStorageMode ?? "off";
   }
 
   setQuoteLocking(shouldLock: boolean) {
@@ -25,6 +30,10 @@ export class User {
 
   setPreferredMint(mintUrl: string) {
     this.mintUrl = mintUrl;
+  }
+
+  setClaimStorageMode(mode: ClaimStorageMode) {
+    this.claimStorageMode = mode;
   }
 }
 
