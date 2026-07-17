@@ -1,6 +1,7 @@
 import { verifyAuth } from "@/utils/auth";
 import { RawData, WebSocket } from "ws";
 import { subManager } from "@/config";
+import { logger } from "@/utils/logger";
 
 type ParsedWebSocketMessage = {
   type: "challenge-response";
@@ -17,12 +18,20 @@ export class WebSocketConnection {
     this.socket = ws;
     this.url = url;
     this.timer = setTimeout(() => {
+      logger.warn(`WS auth timeout: pubkey=undefined code=undefined reason=15s-elapsed`);
       this.send("error", "Unauthorized");
       this.close();
     }, 15000);
     this.send("challenge", { url, method: "GET" });
-    ws.on("close", () => {
+    logger.info(`WS constructed: readyState=${ws.readyState}`);
+    ws.on("close", (code, reason) => {
+      logger.info(
+        `WS closed: pubkey=${this.pubkey} code=${code} reason=${reason.toString() || "none"}`,
+      );
       this.close();
+    });
+    ws.on("error", (err) => {
+      logger.info(`WS error: pubkey=${this.pubkey} msg=${err.message}`);
     });
   }
 

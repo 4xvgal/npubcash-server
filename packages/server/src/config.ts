@@ -14,8 +14,13 @@ export const nostrPool = new SimplePool();
 
 export const userRepository = repos.userRepository;
 export const mintQuoteRepository = repos.mintQuoteRepository;
+export const claimRepository = repos.claimRepository;
 export const userService = new UserService(repos.userRepository);
-export const communicatorService = new CommunicatorService(repos.mintQuoteRepository);
+export const communicatorService = new CommunicatorService(
+  repos.mintQuoteRepository,
+  repos.claimRepository,
+  repos.userRepository,
+);
 export const proofService = new ProofService(repos.proofRepository);
 export const mintService = new MintService(repos.mintRepository);
 
