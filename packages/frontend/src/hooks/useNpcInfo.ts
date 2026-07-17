@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 
 export const useNpcInfo = () => {
   const [info, setInfo] = useState<User>();
+  const [claimBalance, setClaimBalance] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const manager = useManager();
@@ -13,9 +14,10 @@ export const useNpcInfo = () => {
       setLoading(true);
       setError(null);
       try {
-        const info = await manager.ext.npc.getInfo();
+        const { user, claimBalance } = await manager.ext.npc.getInfo();
         if (!signal?.cancelled) {
-          setInfo(info);
+          setInfo(user);
+          setClaimBalance(claimBalance);
         }
       } catch (e) {
         console.error(e);
@@ -39,5 +41,5 @@ export const useNpcInfo = () => {
     };
   }, [refetch]);
 
-  return { info, error, loading, refetch };
+  return { info, claimBalance, error, loading, refetch };
 };
