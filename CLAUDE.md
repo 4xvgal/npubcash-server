@@ -40,7 +40,7 @@ This is a **Bun monorepo** with four packages:
 
 The server uses domain-driven design:
 
-- **Domain layer** (`domain/`) - Business logic services (UserService, MintService, ProofService, CommunicatorService)
+- **Domain layer** (`domain/`) - Business logic services (UserService, MintService, ProofService, CommunicatorService, Claim domain)
 - **Controller layer** (`controller/`) - HTTP request handlers
 - **Infrastructure** (`infrastructure/db/`) - Repository pattern implementations
 - **Database** (`database/`) - Adapter pattern supporting PostgreSQL (production) and SQLite (development)
@@ -49,6 +49,7 @@ Key patterns:
 - Event bus for decoupled communication (e.g., `quotePaid` events)
 - Hybrid transport system for mint communication (WebSocket + HTTP polling with automatic fallback)
 - NIP-98 authentication (Nostr signed events) and JWT tokens
+- Opt-in fallback storage: users can set `claim_storage_mode = 'on_expire'` so ISSUED quotes within 3 hours of expiry are auto-stored as server-side claims
 
 ### Frontend Architecture
 

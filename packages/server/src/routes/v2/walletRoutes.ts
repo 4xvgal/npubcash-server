@@ -26,6 +26,10 @@ const walletRouter = Router();
  *     responses:
  *       200:
  *         description: Paginated list of mint quotes
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/QuotesResponse'
  */
 walletRouter.get(
   "/quotes",
