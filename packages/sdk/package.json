@@ -24,6 +24,7 @@
     "npubcash-types": "workspace:^"
   },
   "devDependencies": {
+    "@types/bun": "^1.2.4",
     "typescript": "~5.8.3",
     "vite": "^7.0.4",
     "vite-plugin-dts": "^4.5.4"

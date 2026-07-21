@@ -3,7 +3,7 @@ import type { UserResponse } from "npubcash-types";
 import type { Logger } from "./logger";
 import type { ApiResponse, RequestOptions } from "./types";
 
-interface AuthenticatedRequest {
+export interface AuthenticatedRequest {
   <T extends ApiResponse>(path: string, options?: RequestOptions): Promise<T>;
 }
 
