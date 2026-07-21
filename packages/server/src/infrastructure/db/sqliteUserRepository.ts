@@ -10,6 +10,7 @@ type UserTableRow = {
   name: string | null;
   mint_url: string;
   lock_quote: number;
+  relays: string;
 };
 
 export class SqliteUserRepository implements UserRepository {
@@ -52,12 +53,12 @@ export class SqliteUserRepository implements UserRepository {
 
   async upsertUsername(pubkey: string, name: string): Promise<User> {
     const query = `
-INSERT INTO l_users (pubkey, mint_url, name)
-VALUES (?, ?, ?)
+INSERT INTO l_users (pubkey, mint_url, name, relays)
+VALUES (?, ?, ?, ?)
 ON CONFLICT (pubkey)
 DO UPDATE SET name = excluded.name
 RETURNING *;`;
-    const params = [pubkey, config.mintUrl, name];
+    const params = [pubkey, config.mintUrl, name, JSON.stringify([])];
     const queryRes = await queryWrapper<UserTableRow>(query, params);
     if (queryRes.rowCount === 0) {
       throw new Error("Did not update username");
@@ -85,19 +86,21 @@ DO UPDATE SET lock_quote = excluded.lock_quote;`;
 
   async saveUser(user: User): Promise<void> {
     const query = `
-INSERT INTO l_users (pubkey, name, mint_url, lock_quote)
-VALUES (?, ?, ?, ?)
+INSERT INTO l_users (pubkey, name, mint_url, lock_quote, relays)
+VALUES (?, ?, ?, ?, ?)
 ON CONFLICT (pubkey)
 DO UPDATE SET
 name = excluded.name,
 mint_url = excluded.mint_url,
-lock_quote = excluded.lock_quote;
+lock_quote = excluded.lock_quote,
+relays = excluded.relays;
 `;
     const queryRes = await queryWrapper(query, [
       user.pubkey,
       user.name,
       user.mintUrl,
       user.lockQuote ? 1 : 0,
+      JSON.stringify(user.relays),
     ]);
     if (queryRes.rowCount === 0) {
       throw new Error("Did not update user");
@@ -105,18 +108,21 @@ lock_quote = excluded.lock_quote;
   }
 
   private castRowToUser(row: UserTableRow): User | UserWithName {
+    const relays = JSON.parse(row.relays || "[]") as string[];
     if (row.name) {
       return new UserWithName({
         pubkey: row.pubkey,
         name: row.name,
         mintUrl: row.mint_url,
         lockQuote: Boolean(row.lock_quote),
+        relays,
       });
     }
     return new User({
       pubkey: row.pubkey,
       mintUrl: row.mint_url,
       lockQuote: Boolean(row.lock_quote),
+      relays,
     });
   }
 }

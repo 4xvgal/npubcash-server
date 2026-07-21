@@ -10,6 +10,7 @@ type UserTableRow = {
   name: string | null;
   mint_url: string;
   lock_quote: boolean;
+  relays: string[];
 };
 
 export class PostgresUserRepository implements UserRepository {
@@ -50,12 +51,12 @@ export class PostgresUserRepository implements UserRepository {
 
   async upsertUsername(pubkey: string, name: string): Promise<User> {
     const query = `
-INSERT INTO l_users (pubkey, mint_url, name)
-VALUES ($1, $2, $3)
+INSERT INTO l_users (pubkey, mint_url, name, relays)
+VALUES ($1, $2, $3, $4)
 ON CONFLICT (pubkey)
 DO UPDATE SET name = $3
 RETURNING *;`;
-    const params = [pubkey, config.mintUrl, name];
+    const params = [pubkey, config.mintUrl, name, []];
     const queryRes = await queryWrapper<UserTableRow>(query, params);
     if (queryRes.rowCount === 0) {
       throw new Error("Did not update username");
@@ -80,19 +81,21 @@ DO UPDATE SET lock_quote = $1;`;
 
   async saveUser(user: User): Promise<void> {
     const query = `
-INSERT INTO l_users (pubkey, name, mint_url, lock_quote)
-VALUES ($1, $2, $3, $4)
+INSERT INTO l_users (pubkey, name, mint_url, lock_quote, relays)
+VALUES ($1, $2, $3, $4, $5)
 ON CONFLICT (pubkey)
 DO UPDATE SET
 name = $2,
 mint_url = $3,
-lock_quote = $4;
+lock_quote = $4,
+relays = $5;
 `;
     const queryRes = await queryWrapper(query, [
       user.pubkey,
       user.name,
       user.mintUrl,
       user.lockQuote,
+      user.relays,
     ]);
     if (queryRes.rowCount === 0) {
       throw new Error("Did not update user");
@@ -106,12 +109,14 @@ lock_quote = $4;
         name: row.name,
         mintUrl: row.mint_url,
         lockQuote: row.lock_quote,
+        relays: row.relays || [],
       });
     }
     return new User({
       pubkey: row.pubkey,
       mintUrl: row.mint_url,
       lockQuote: row.lock_quote,
+      relays: row.relays || [],
     });
   }
 }
