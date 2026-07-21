@@ -6,6 +6,7 @@ export interface UserCofig {
   mintUrl: string;
   lockQuote: boolean;
   claimStorageMode?: ClaimStorageMode;
+  relays?: string[];
 }
 
 export class User {
@@ -15,6 +16,7 @@ export class User {
   //TODO: Make sure casing is consistent
   lockQuote: boolean;
   claimStorageMode: ClaimStorageMode;
+  relays: string[];
 
   constructor(config: UserCofig) {
     this.pubkey = config.pubkey;
@@ -22,6 +24,7 @@ export class User {
     this.name = config.name;
     this.lockQuote = config.lockQuote;
     this.claimStorageMode = config.claimStorageMode ?? "off";
+    this.relays = config.relays ?? [];
   }
 
   setQuoteLocking(shouldLock: boolean) {
@@ -34,6 +37,10 @@ export class User {
 
   setClaimStorageMode(mode: ClaimStorageMode) {
     this.claimStorageMode = mode;
+  }
+
+  setRelays(urls: string[]) {
+    this.relays = urls;
   }
 }
 
