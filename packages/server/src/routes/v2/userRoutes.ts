@@ -4,6 +4,7 @@ import {
   getUserSettings,
   updateClaimStorageSetting,
   updateUserMintSetting,
+  updateUserRelays,
   updateUserSettingLock,
 } from "@/controller/userSettingsController";
 import { isAuthMiddleware } from "@/middleware/auth";
@@ -194,6 +195,12 @@ userRouter.patch(
   "/claim-storage",
   isAuthMiddleware("/api/v2/user/claim-storage", "PATCH"),
   updateClaimStorageSetting,
+);
+
+userRouter.patch(
+  "/relays",
+  isAuthMiddleware("/api/v2/user/relays", "PATCH"),
+  updateUserRelays,
 );
 
 export default userRouter;
