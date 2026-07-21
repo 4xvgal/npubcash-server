@@ -8,6 +8,14 @@ export type User = {
   name?: string;
   mintUrl: string;
   lockQuote: boolean;
+  relays: string[];
+};
+
+/**
+ * Payload for setting the user's preferred Nostr relays.
+ */
+export type SetRelaysPayload = {
+  relays: string[];
 };
 
 /**
