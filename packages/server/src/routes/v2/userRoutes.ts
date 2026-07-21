@@ -2,6 +2,7 @@ import { usernameController } from "@/controller/username";
 import {
   getUserSettings,
   updateUserMintSetting,
+  updateUserRelays,
   updateUserSettingLock,
 } from "@/controller/userSettingsController";
 import { isAuthMiddleware } from "@/middleware/auth";
@@ -31,6 +32,12 @@ userRouter.patch(
   "/mint",
   isAuthMiddleware("/api/v2/user/mint", "PATCH"),
   updateUserMintSetting,
+);
+
+userRouter.patch(
+  "/relays",
+  isAuthMiddleware("/api/v2/user/relays", "PATCH"),
+  updateUserRelays,
 );
 
 export default userRouter;
