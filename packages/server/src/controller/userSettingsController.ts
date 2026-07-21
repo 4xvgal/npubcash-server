@@ -94,32 +94,41 @@ export async function updateUserMintSetting(
   }
 }
 
+function normalizeRelayUrl(url: URL): string {
+  const pathname = url.pathname === "/" ? "" : url.pathname;
+  return `${url.protocol}//${url.host}${pathname}`;
+}
+
 function validateRelays(relays: unknown): string[] {
   if (!Array.isArray(relays)) {
-    throw new BadRequestError("Invalid relays");
+    throw new BadRequestError("relays must be an array");
   }
   if (relays.length > 20) {
-    throw new BadRequestError("Invalid relays");
+    throw new BadRequestError("relays must contain at most 20 items");
   }
   const seen = new Set<string>();
+  const normalized: string[] = [];
   for (const relay of relays) {
     if (typeof relay !== "string") {
-      throw new BadRequestError("Invalid relays");
+      throw new BadRequestError("each relay must be a string");
     }
+    let url: URL;
     try {
-      const url = new URL(relay);
-      if (url.protocol !== "ws:" && url.protocol !== "wss:") {
-        throw new BadRequestError("Invalid relays");
-      }
+      url = new URL(relay);
     } catch {
-      throw new BadRequestError("Invalid relays");
+      throw new BadRequestError("each relay must be a valid ws:// or wss:// URL");
     }
-    if (seen.has(relay)) {
-      throw new BadRequestError("Invalid relays");
+    if (url.protocol !== "ws:" && url.protocol !== "wss:") {
+      throw new BadRequestError("each relay must use ws:// or wss://");
     }
-    seen.add(relay);
+    const normalizedUrl = normalizeRelayUrl(url);
+    if (seen.has(normalizedUrl)) {
+      throw new BadRequestError("relays must not contain duplicates");
+    }
+    seen.add(normalizedUrl);
+    normalized.push(normalizedUrl);
   }
-  return relays;
+  return normalized;
 }
 
 export async function updateUserRelays(
@@ -131,6 +140,9 @@ export async function updateUserRelays(
     const {
       data: { pubkey },
     } = req.authData!;
+    if (!req.body || typeof req.body !== "object") {
+      throw new BadRequestError("Invalid request body");
+    }
     const relays = validateRelays(req.body.relays);
     let user = await userService.getUserByPubkey(pubkey);
     if (!user) {

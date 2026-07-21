@@ -89,6 +89,18 @@ describe("updateUserRelays", () => {
     expect(createdUser.relays).toEqual(["wss://relay.test"]);
   });
 
+  test("rejects undefined request body", async () => {
+    const req = makeRequest(undefined);
+    const res = makeResponse();
+    const next = makeNext();
+
+    await controller.updateUserRelays(req, res, next);
+
+    expect(next).toHaveBeenCalled();
+    const error = (next as any).mock.calls[0][0];
+    expect(error.message).toBe("Invalid request body");
+  });
+
   test("rejects non-array relays", async () => {
     const req = makeRequest({ relays: "wss://relay.test" });
     const res = makeResponse();
@@ -98,7 +110,7 @@ describe("updateUserRelays", () => {
 
     expect(next).toHaveBeenCalled();
     const error = (next as any).mock.calls[0][0];
-    expect(error.message).toBe("Invalid relays");
+    expect(error.message).toBe("relays must be an array");
   });
 
   test("rejects too many relays", async () => {
@@ -110,7 +122,31 @@ describe("updateUserRelays", () => {
 
     expect(next).toHaveBeenCalled();
     const error = (next as any).mock.calls[0][0];
-    expect(error.message).toBe("Invalid relays");
+    expect(error.message).toBe("relays must contain at most 20 items");
+  });
+
+  test("rejects non-string relay items", async () => {
+    const req = makeRequest({ relays: [123] });
+    const res = makeResponse();
+    const next = makeNext();
+
+    await controller.updateUserRelays(req, res, next);
+
+    expect(next).toHaveBeenCalled();
+    const error = (next as any).mock.calls[0][0];
+    expect(error.message).toBe("each relay must be a string");
+  });
+
+  test("rejects invalid relay URL", async () => {
+    const req = makeRequest({ relays: ["not a url"] });
+    const res = makeResponse();
+    const next = makeNext();
+
+    await controller.updateUserRelays(req, res, next);
+
+    expect(next).toHaveBeenCalled();
+    const error = (next as any).mock.calls[0][0];
+    expect(error.message).toBe("each relay must be a valid ws:// or wss:// URL");
   });
 
   test("rejects invalid relay protocol", async () => {
@@ -122,7 +158,7 @@ describe("updateUserRelays", () => {
 
     expect(next).toHaveBeenCalled();
     const error = (next as any).mock.calls[0][0];
-    expect(error.message).toBe("Invalid relays");
+    expect(error.message).toBe("each relay must use ws:// or wss://");
   });
 
   test("rejects duplicate relays", async () => {
@@ -134,6 +170,46 @@ describe("updateUserRelays", () => {
 
     expect(next).toHaveBeenCalled();
     const error = (next as any).mock.calls[0][0];
-    expect(error.message).toBe("Invalid relays");
+    expect(error.message).toBe("relays must not contain duplicates");
+  });
+
+  test("rejects duplicates after normalizing trailing slashes", async () => {
+    const req = makeRequest({ relays: ["wss://relay.test", "wss://relay.test/"] });
+    const res = makeResponse();
+    const next = makeNext();
+
+    await controller.updateUserRelays(req, res, next);
+
+    expect(next).toHaveBeenCalled();
+    const error = (next as any).mock.calls[0][0];
+    expect(error.message).toBe("relays must not contain duplicates");
+  });
+
+  test("normalizes relay URLs by stripping trailing slash", async () => {
+    const user = makeUser();
+    getUserByPubkeyImpl = async () => user;
+    saveUserImpl = async () => {};
+    const req = makeRequest({ relays: ["wss://relay.test/"] });
+    const res = makeResponse();
+    const next = makeNext();
+
+    await controller.updateUserRelays(req, res, next);
+
+    expect(user.relays).toEqual(["wss://relay.test"]);
+  });
+
+  test("returns a defensive copy of relays array", async () => {
+    const user = makeUser();
+    getUserByPubkeyImpl = async () => user;
+    saveUserImpl = async () => {};
+    const relays = ["wss://relay.test"];
+    const req = makeRequest({ relays });
+    const res = makeResponse();
+    const next = makeNext();
+
+    await controller.updateUserRelays(req, res, next);
+    relays.push("wss://relay2.test");
+
+    expect(user.relays).toEqual(["wss://relay.test"]);
   });
 });
