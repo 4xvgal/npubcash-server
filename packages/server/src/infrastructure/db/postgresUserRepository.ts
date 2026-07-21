@@ -56,7 +56,7 @@ VALUES ($1, $2, $3, $4)
 ON CONFLICT (pubkey)
 DO UPDATE SET name = $3
 RETURNING *;`;
-    const params = [pubkey, config.mintUrl, name, []];
+    const params = [pubkey, config.mintUrl, name, JSON.stringify([])];
     const queryRes = await queryWrapper<UserTableRow>(query, params);
     if (queryRes.rowCount === 0) {
       throw new Error("Did not update username");
@@ -95,7 +95,7 @@ relays = $5;
       user.name,
       user.mintUrl,
       user.lockQuote,
-      user.relays,
+      JSON.stringify(user.relays),
     ]);
     if (queryRes.rowCount === 0) {
       throw new Error("Did not update user");
