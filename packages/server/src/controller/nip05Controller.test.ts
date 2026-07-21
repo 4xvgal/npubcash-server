@@ -10,6 +10,7 @@ const mockUserService = {
 
 mock.module("@/config", () => ({
   userService: mockUserService,
+  mintService: {},
 }));
 
 let nip05Controller: typeof import("@/controller/nip05Controller").nip05Controller;
@@ -21,7 +22,12 @@ beforeAll(async () => {
 
 describe("nip05Controller", () => {
   const makeRequest = (name: string) =>
-    ({ query: { name } }) as unknown as Request;
+    ({ query: { name } }) as unknown as Request<
+      unknown,
+      unknown,
+      unknown,
+      { name: string }
+    >;
 
   const makeResponse = () => {
     const res: any = {};
@@ -33,9 +39,14 @@ describe("nip05Controller", () => {
   };
 
   test("returns empty relays when name is missing", async () => {
-    const req = { query: {} } as unknown as Request;
+    const req = { query: {} } as unknown as Request<
+      unknown,
+      unknown,
+      unknown,
+      { name: string }
+    >;
     const res = makeResponse();
-    await nip05Controller(req, res, () => {});
+    await nip05Controller(req, res);
     expect(res.json).toHaveBeenCalledWith({ names: {}, relays: {} });
   });
 
@@ -43,7 +54,7 @@ describe("nip05Controller", () => {
     getUserByNameImpl = async () => null;
     const req = makeRequest("alice");
     const res = makeResponse();
-    await nip05Controller(req, res, () => {});
+    await nip05Controller(req, res);
     expect(res.json).toHaveBeenCalledWith({ names: {}, relays: {} });
   });
 
@@ -58,7 +69,7 @@ describe("nip05Controller", () => {
       });
     const req = makeRequest("alice");
     const res = makeResponse();
-    await nip05Controller(req, res, () => {});
+    await nip05Controller(req, res);
     expect(res.json).toHaveBeenCalledWith({
       names: { alice: "pk1" },
       relays: { pk1: ["wss://relay.test"] },
@@ -75,7 +86,7 @@ describe("nip05Controller", () => {
       });
     const req = makeRequest("alice");
     const res = makeResponse();
-    await nip05Controller(req, res, () => {});
+    await nip05Controller(req, res);
     expect(res.json).toHaveBeenCalledWith({
       names: { alice: "pk1" },
       relays: {},
