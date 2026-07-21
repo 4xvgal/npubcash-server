@@ -3,6 +3,7 @@ export interface UserCofig {
   name?: string;
   mintUrl: string;
   lockQuote: boolean;
+  relays?: string[];
 }
 
 export class User {
@@ -11,12 +12,14 @@ export class User {
   mintUrl: string;
   //TODO: Make sure casing is consistent
   lockQuote: boolean;
+  relays: string[];
 
   constructor(config: UserCofig) {
     this.pubkey = config.pubkey;
     this.mintUrl = config.mintUrl;
     this.name = config.name;
     this.lockQuote = config.lockQuote;
+    this.relays = config.relays ?? [];
   }
 
   setQuoteLocking(shouldLock: boolean) {
@@ -25,6 +28,10 @@ export class User {
 
   setPreferredMint(mintUrl: string) {
     this.mintUrl = mintUrl;
+  }
+
+  setRelays(urls: string[]) {
+    this.relays = urls;
   }
 }
 
