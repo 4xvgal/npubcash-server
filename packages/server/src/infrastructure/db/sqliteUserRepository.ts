@@ -11,6 +11,7 @@ type UserTableRow = {
   mint_url: string;
   lock_quote: number;
   claim_storage_mode: string;
+  relays: string;
 };
 
 export class SqliteUserRepository implements UserRepository {
@@ -53,12 +54,12 @@ export class SqliteUserRepository implements UserRepository {
 
   async upsertUsername(pubkey: string, name: string): Promise<User> {
     const query = `
-INSERT INTO l_users (pubkey, mint_url, name)
-VALUES (?, ?, ?)
+INSERT INTO l_users (pubkey, mint_url, name, relays)
+VALUES (?, ?, ?, ?)
 ON CONFLICT (pubkey)
 DO UPDATE SET name = excluded.name
 RETURNING *;`;
-    const params = [pubkey, config.mintUrl, name];
+    const params = [pubkey, config.mintUrl, name, JSON.stringify([])];
     const queryRes = await queryWrapper<UserTableRow>(query, params);
     if (queryRes.rowCount === 0) {
       throw new Error("Did not update username");
@@ -101,14 +102,15 @@ DO UPDATE SET claim_storage_mode = excluded.claim_storage_mode;`;
 
   async saveUser(user: User): Promise<void> {
     const query = `
-INSERT INTO l_users (pubkey, name, mint_url, lock_quote, claim_storage_mode)
-VALUES (?, ?, ?, ?, ?)
+INSERT INTO l_users (pubkey, name, mint_url, lock_quote, claim_storage_mode, relays)
+VALUES (?, ?, ?, ?, ?, ?)
 ON CONFLICT (pubkey)
 DO UPDATE SET
 name = excluded.name,
 mint_url = excluded.mint_url,
 lock_quote = excluded.lock_quote,
-claim_storage_mode = excluded.claim_storage_mode;
+claim_storage_mode = excluded.claim_storage_mode,
+relays = excluded.relays;
 `;
     const queryRes = await queryWrapper(query, [
       user.pubkey,
@@ -116,6 +118,7 @@ claim_storage_mode = excluded.claim_storage_mode;
       user.mintUrl,
       user.lockQuote ? 1 : 0,
       user.claimStorageMode,
+      JSON.stringify(user.relays),
     ]);
     if (queryRes.rowCount === 0) {
       throw new Error("Did not update user");
@@ -123,6 +126,7 @@ claim_storage_mode = excluded.claim_storage_mode;
   }
 
   private castRowToUser(row: UserTableRow): User | UserWithName {
+    const relays = JSON.parse(row.relays || "[]") as string[];
     if (row.name) {
       return new UserWithName({
         pubkey: row.pubkey,
@@ -130,6 +134,7 @@ claim_storage_mode = excluded.claim_storage_mode;
         mintUrl: row.mint_url,
         lockQuote: Boolean(row.lock_quote),
         claimStorageMode: row.claim_storage_mode as "off" | "on_expire",
+        relays,
       });
     }
     return new User({
@@ -137,6 +142,7 @@ claim_storage_mode = excluded.claim_storage_mode;
       mintUrl: row.mint_url,
       lockQuote: Boolean(row.lock_quote),
       claimStorageMode: row.claim_storage_mode as "off" | "on_expire",
+      relays,
     });
   }
 }

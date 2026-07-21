@@ -11,6 +11,7 @@ type UserTableRow = {
   mint_url: string;
   lock_quote: boolean;
   claim_storage_mode: string;
+  relays: string[];
 };
 
 export class PostgresUserRepository implements UserRepository {
@@ -51,12 +52,12 @@ export class PostgresUserRepository implements UserRepository {
 
   async upsertUsername(pubkey: string, name: string): Promise<User> {
     const query = `
-INSERT INTO l_users (pubkey, mint_url, name)
-VALUES ($1, $2, $3)
+INSERT INTO l_users (pubkey, mint_url, name, relays)
+VALUES ($1, $2, $3, $4)
 ON CONFLICT (pubkey)
 DO UPDATE SET name = $3
 RETURNING *;`;
-    const params = [pubkey, config.mintUrl, name];
+    const params = [pubkey, config.mintUrl, name, JSON.stringify([])];
     const queryRes = await queryWrapper<UserTableRow>(query, params);
     if (queryRes.rowCount === 0) {
       throw new Error("Did not update username");
@@ -96,14 +97,15 @@ DO UPDATE SET claim_storage_mode = $1;`;
 
   async saveUser(user: User): Promise<void> {
     const query = `
-INSERT INTO l_users (pubkey, name, mint_url, lock_quote, claim_storage_mode)
-VALUES ($1, $2, $3, $4, $5)
+INSERT INTO l_users (pubkey, name, mint_url, lock_quote, claim_storage_mode, relays)
+VALUES ($1, $2, $3, $4, $5, $6)
 ON CONFLICT (pubkey)
 DO UPDATE SET
 name = $2,
 mint_url = $3,
 lock_quote = $4,
-claim_storage_mode = $5;
+claim_storage_mode = $5,
+relays = $6;
 `;
     const queryRes = await queryWrapper(query, [
       user.pubkey,
@@ -111,6 +113,7 @@ claim_storage_mode = $5;
       user.mintUrl,
       user.lockQuote,
       user.claimStorageMode,
+      JSON.stringify(user.relays),
     ]);
     if (queryRes.rowCount === 0) {
       throw new Error("Did not update user");
@@ -125,6 +128,7 @@ claim_storage_mode = $5;
         mintUrl: row.mint_url,
         lockQuote: row.lock_quote,
         claimStorageMode: row.claim_storage_mode as "off" | "on_expire",
+        relays: row.relays || [],
       });
     }
     return new User({
@@ -132,6 +136,7 @@ claim_storage_mode = $5;
       mintUrl: row.mint_url,
       lockQuote: row.lock_quote,
       claimStorageMode: row.claim_storage_mode as "off" | "on_expire",
+      relays: row.relays || [],
     });
   }
 }
