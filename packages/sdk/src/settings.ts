@@ -78,4 +78,29 @@ export class SettingsManager {
       throw error;
     }
   }
+
+  /**
+   * Update the user's preferred Nostr relays.
+   * @param relays Array of relay URLs (ws:// or wss://). Max 20 entries.
+   * @returns Updated user settings resource.
+   */
+  async setRelays(relays: string[]): Promise<UserResponse> {
+    try {
+      const response = await this._authenticatedRequest<UserResponse>(
+        "/api/v2/user/relays",
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ relays }),
+        }
+      );
+      this.logger?.info("Relays updated successfully");
+      return response;
+    } catch (error) {
+      this.logger?.error("Error updating relays:", error);
+      throw error;
+    }
+  }
 }
