@@ -193,4 +193,15 @@ export const migrations: Migration[] = [
       `,
     },
   },
+  {
+    id: "006_add_relays_to_users",
+    sql: {
+      postgres: `
+        ALTER TABLE l_users ADD COLUMN IF NOT EXISTS relays JSONB NOT NULL DEFAULT '[]';
+      `,
+      sqlite: `
+        ALTER TABLE l_users ADD COLUMN relays TEXT NOT NULL DEFAULT '[]';
+      `,
+    },
+  },
 ];
