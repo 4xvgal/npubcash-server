@@ -14,7 +14,10 @@ export async function nip05Controller(
     if (!user) {
       return res.json({ names: {}, relays: {} });
     }
-    return res.json({ names: { [user.name]: user.pubkey }, relays: {} });
+    return res.json({
+      names: { [user.name]: user.pubkey },
+      relays: user.relays.length > 0 ? { [user.pubkey]: user.relays } : {},
+    });
   } catch {
     res.json({ error: true, message: "Failed to check nostr.json" });
   }
