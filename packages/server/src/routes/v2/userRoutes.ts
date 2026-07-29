@@ -197,6 +197,35 @@ userRouter.patch(
   updateClaimStorageSetting,
 );
 
+/**
+ * @openapi
+ * /api/v2/user/relays:
+ *   patch:
+ *     summary: Set preferred Nostr relays
+ *     tags: [User]
+ *     security:
+ *       - JWT: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               relays:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 maxItems: 20
+ *                 description: Array of ws:// or wss:// relay URLs
+ *     responses:
+ *       200:
+ *         description: Updated user settings
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UserResponse'
+ */
 userRouter.patch(
   "/relays",
   isAuthMiddleware("/api/v2/user/relays", "PATCH"),
