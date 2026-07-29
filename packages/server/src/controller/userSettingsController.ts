@@ -95,7 +95,7 @@ export async function updateUserMintSetting(
 }
 
 function normalizeRelayUrl(url: URL): string {
-  const pathname = url.pathname === "/" ? "" : url.pathname;
+  const pathname = url.pathname.replace(/\/+$/, "");
   return `${url.protocol}//${url.host}${pathname}`;
 }
 

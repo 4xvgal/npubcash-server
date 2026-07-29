@@ -107,8 +107,16 @@ relays = excluded.relays;
     }
   }
 
+  private parseRelays(relays: unknown): string[] {
+    try {
+      return JSON.parse((relays as string) || "[]");
+    } catch {
+      return [];
+    }
+  }
+
   private castRowToUser(row: UserTableRow): User | UserWithName {
-    const relays = JSON.parse(row.relays || "[]") as string[];
+    const relays = this.parseRelays(row.relays);
     if (row.name) {
       return new UserWithName({
         pubkey: row.pubkey,
