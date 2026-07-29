@@ -45,7 +45,8 @@ export class NPCClient {
   private readonly authProvider: AuthProvider;
   /**
    * Settings API for the authenticated user account.
-   * Use {@link SettingsManager.setMintUrl} and {@link SettingsManager.setLock}.
+   * Use {@link SettingsManager.setMintUrl}, {@link SettingsManager.setLock},
+   * and {@link SettingsManager.setRelays}.
    */
   public readonly settings: SettingsManager;
   private logger: Logger;
