@@ -176,7 +176,7 @@ export async function updateClaimStorageSetting(
 }
 
 function normalizeRelayUrl(url: URL): string {
-  const pathname = url.pathname === "/" ? "" : url.pathname;
+  const pathname = url.pathname.replace(/\/+$/, "");
   return `${url.protocol}//${url.host}${pathname}`;
 >>>>>>> 5fbe699 (fix(server): normalize relay urls and improve validation messages)
 }
