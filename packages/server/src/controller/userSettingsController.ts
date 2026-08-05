@@ -122,7 +122,6 @@ export async function updateUserMintSetting(
   }
 }
 
-<<<<<<< HEAD
 export async function getClaimStorageSetting(
   req: Request,
   res: Response,
@@ -178,7 +177,6 @@ export async function updateClaimStorageSetting(
 function normalizeRelayUrl(url: URL): string {
   const pathname = url.pathname.replace(/\/+$/, "");
   return `${url.protocol}//${url.host}${pathname}`;
->>>>>>> 5fbe699 (fix(server): normalize relay urls and improve validation messages)
 }
 
 function validateRelays(relays: unknown): string[] {
